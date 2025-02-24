@@ -16,12 +16,12 @@ args = parser.parse_args()
 
 TARGET_SPEC = {
     'observation': {
-        'image': {'shape': (128, 128, 3),
+        'image': {'shape': (224, 224, 3),
                   'dtype': np.uint8,
                   'range': (0, 255)}
     },
-    'action': {'shape': (8,),
-               'dtype': np.float32,
+    'action': {'shape': (7,),
+               'dtype': np.float64,
                'range': [(-1, -1, -1, -2*np.pi, -2*np.pi, -2*np.pi, -1, 0),
                          (+1, +1, +1, +2*np.pi, +2*np.pi, +2*np.pi, +1, 1)]},
     'discount': {'shape': (),
