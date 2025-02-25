@@ -138,14 +138,16 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
                 }
             }
             sample_id = episode_path + "_" + str(np.random.randint(0, 1000000))
-            # NOTE: if you want to skip an example for whatever reason, simply return None, e.g. only success samples are used for training
-            if not success:
-                return None
-            else:
+            if success:
                 return sample_id, sample
+            else:
+                return sample_id, None
 
         # create list of all examples
-        task_paths = glob.glob(path)
+        # task_paths = glob.glob(path)
+        task_paths = ["~/shared_data/dataset/COLLECT-libero_90-minivla-2025_02_11-09_20_30--test/0",
+                      "~/shared_data/dataset/COLLECT-libero_90-minivla-2025_02_11-09_20_30--test/1",
+                      "~/shared_data/dataset/COLLECT-libero_90-minivla-2025_02_11-09_20_30--test/2"]
 
         # for smallish datasets, use single-thread parsing
         for task_path in task_paths:
@@ -157,7 +159,10 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
 
             for i, episode in enumerate(dataset):
                 episode_path = language_instruction + f"/{i}"
-                yield _parse_example(episode_path, episode, language_instruction)
+                sample_id, sample = _parse_example(episode_path, episode, language_instruction)
+                # NOTE: if you want to skip an example for whatever reason, simply return None, e.g. only success samples are used for training
+                if sample is not None:
+                    yield sample_id, sample
 
         # for large datasets use beam to parallelize data parsing (this will have initialization overhead)
         # beam = tfds.core.lazy_imports.apache_beam
