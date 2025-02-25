@@ -93,7 +93,7 @@ class LiberoDataset(tfds.core.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
-        path = '/home/v-rusyang/shared_data/dataset/COLLECT-libero_90-minivla-2025_02_11-09_20_30--test'
+        path = '/home/v-rusyang/openvla/experiments/logs/COLLECT-libero_90-minivla-2025_02_24-06_41_23--test'
         return {
             'train': self._generate_examples(path=path+ "/*"),
             # 'val': self._generate_examples(path='data/val/episode_*.npy'), # TODO: add val set, currently only train set is used
