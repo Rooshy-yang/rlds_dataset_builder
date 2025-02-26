@@ -7,7 +7,7 @@ import tensorflow_datasets as tfds
 # import tensorflow_hub as hub
 
 
-class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
+class LiberoFailureDataset(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for example dataset."""
 
     VERSION = tfds.core.Version('1.0.0')
@@ -138,7 +138,7 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
                 }
             }
             sample_id = episode_path + "_" + str(np.random.randint(0, 1000000))
-            if success:
+            if not success:
                 return sample_id, sample
             else:
                 return sample_id, None
