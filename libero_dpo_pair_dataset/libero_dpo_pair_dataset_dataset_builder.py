@@ -44,7 +44,13 @@ class LiberoDpoPairDataset(tfds.core.GeneratorBasedBuilder):
                                 '2x gripper position, 1x door opening angle].',
                         )
                     }),
-                    'action': tfds.features.Tensor(
+                    'chosen_action': tfds.features.Tensor(
+                        shape=(7,),
+                        dtype=np.float64,
+                        doc='Robot action, consists of [7x joint velocities, '
+                            '2x gripper velocities, 1x terminate episode].',
+                    ),
+                    'rejected_action': tfds.features.Tensor(
                         shape=(7,),
                         dtype=np.float64,
                         doc='Robot action, consists of [7x joint velocities, '
@@ -87,6 +93,12 @@ class LiberoDpoPairDataset(tfds.core.GeneratorBasedBuilder):
                     'success': tfds.features.Scalar(
                         dtype=np.bool_,
                         doc='True if the episode is successful.'
+                    ),
+                    'chosen_action_id': tfds.features.Text(
+                        doc='Path to the chosen action data file.'
+                    ),
+                    'rejected_action_id': tfds.features.Text(
+                        doc='Path to the rejected action data file.'
                     ),
                 }),
             }))
