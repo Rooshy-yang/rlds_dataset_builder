@@ -1,4 +1,4 @@
-# NOTE: 2025-03-11, 只提取了前16个step 的数据。
+# NOTE: 2025-03-11, 只提取了前1个step 的数据。
 # 
 # 
 # 
@@ -12,8 +12,65 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
+import math
+from PIL import Image
 
 
+def get_libero_image(obs, resize_size, key="agentview_image"):
+    """Extracts image from observations and preprocesses it."""
+    assert isinstance(resize_size, int) or isinstance(resize_size, tuple)
+    if isinstance(resize_size, int):
+        resize_size = (resize_size, resize_size)
+    img = obs[key]
+    img = np.flipud(img)
+    # img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
+    img = Image.fromarray(img)
+    img = img.resize(resize_size, Image.Resampling.LANCZOS)  # resize to size seen at train time
+    img = img.convert("RGB")
+    return np.array(img)
+
+def apply_center_crop(im, t_h, t_w):
+    """
+    Source: https://github.com/ARISE-Initiative/robomimic/blob/5dee58f9cc1235010d0877142b54d0e82dd23986/robomimic/utils/obs_utils.py#L268
+
+    Takes a center crop of an image.
+
+    Args:
+        im (np.array or torch.Tensor): image of shape (..., height, width, channel)
+        t_h (int): height of crop
+        t_w (int): width of crop
+
+    Returns:
+        im (np.array or torch.Tensor): center cropped image
+    """
+    assert im.shape[-3] >= t_h and im.shape[-2] >= t_w
+    assert im.shape[-1] in [1, 3, 6]
+    crop_h = int((im.shape[-3] - t_h) / 2)
+    crop_w = int((im.shape[-2] - t_w) / 2)
+    return im[..., crop_h : crop_h + t_h, crop_w : crop_w + t_w, :]
+
+def preprocess_image(img):
+    image = Image.fromarray(img)
+    image = image.convert("RGB")
+
+    # (If trained with image augmentations) Center crop image and then resize back up to original size.
+    # IMPORTANT: Let's say crop scale == 0.9. To get the new height and width (post-crop), we must multiply
+    #            the original height and width by sqrt(0.9) -- not 0.9!
+
+    temp_image = np.array(image)  # (H, W, C)
+    crop_scale = 0.9
+    sqrt_crop_scale = math.sqrt(crop_scale)
+    temp_image_cropped = apply_center_crop(
+        temp_image,
+        t_h=int(sqrt_crop_scale * temp_image.shape[0]),
+        t_w=int(sqrt_crop_scale * temp_image.shape[1]),
+    )
+    temp_image = Image.fromarray(temp_image_cropped)
+    temp_image = temp_image.resize(
+        image.size, Image.Resampling.BILINEAR
+    )  # IMPORTANT: dlimp uses BILINEAR resize
+    image = temp_image
+    return image
 class TestDataset(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for example dataset."""
 
@@ -53,7 +110,7 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
                     }),
                     'action': tfds.features.Tensor(
                         shape=(7,),
-                        dtype=np.float64,
+                        dtype=np.float32,
                         doc='Robot action, consists of [7x joint velocities, '
                             '2x gripper velocities, 1x terminate episode].',
                     ),
@@ -100,7 +157,7 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
-        path = '/home/v-rusyang/openvla/COLLECT-libero_90-minivla-2025_03_06-03_30_37--collect libero90 data/0'
+        path = '/home/v-rusyang/shared_data/COLLECT-libero_90-minivla-2025_03_03-07_56_13--eval_self_trained_minivla/0'
         return {
             'train': self._generate_examples(path=path),
             # 'val': self._generate_examples(path='data/val/episode_*.npy'), # TODO: add val set, currently only train set is used
@@ -120,14 +177,18 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
                 language_embedding = np.zeros(512, dtype=np.float32)
                 if not success:
                     success = step['is_last'] or step['reward'] > 0
+                image = get_libero_image(step['observation'], 224, key='agentview_image')
+                image = preprocess_image(image)
+                wrist_image = get_libero_image(step['observation'], 224, key='robot0_eye_in_hand_image')
+                wrist_image = preprocess_image(wrist_image)
 
                 new_episode.append({
                     'observation': {
-                        'image': step['observation']['agentview_image'].numpy(),
-                        'wrist_image': step['observation']['robot0_eye_in_hand_image'].numpy(),
+                        'image': np.array(image),
+                        'wrist_image': np.array(wrist_image),
                         'state': step['observation']['robot0_proprio-state'].numpy(),
                     },
-                    'action': step['action'].numpy(),
+                    'action': step['action'].numpy().astype(np.float32),
                     'discount': 1.0,
                     'reward': step['reward'].numpy(),
                     'is_first': step['is_first'].numpy(),
@@ -137,9 +198,9 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
                     'language_embedding': language_embedding,
                 })
                 count += 1
-                if count > 16:
+                if count > 1:
                     break
-
+            new_episode.pop(-1)
             # create output data sample
             sample = {
                 'steps': new_episode,
@@ -165,7 +226,8 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
 
             for i, episode in enumerate(dataset):
                 episode_path = language_instruction + f"/{i}"
-                yield _parse_example(episode_path, episode, language_instruction)
+                if i == 0:
+                    yield _parse_example(episode_path, episode, language_instruction)
 
         # for large datasets use beam to parallelize data parsing (this will have initialization overhead)
         # beam = tfds.core.lazy_imports.apache_beam

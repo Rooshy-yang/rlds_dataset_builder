@@ -128,7 +128,8 @@ class LiberoDataset(tfds.core.GeneratorBasedBuilder):
                     'language_instruction': language_instruction,
                     'language_embedding': language_embedding,
                 })
-
+            # NOTE: the final state is fake [0,0,0], so we remove it. TODO: check if this is correct.
+            new_episode.pop(-1)
             # create output data sample
             sample = {
                 'steps': new_episode,
