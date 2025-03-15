@@ -72,6 +72,7 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
     RELEASE_NOTES = {
       '1.0.0': 'Initial release.',
     }
+    DESCRIPTION = "Filtered success only dataset for libero minivla."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
