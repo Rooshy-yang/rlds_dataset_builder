@@ -72,7 +72,8 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
     RELEASE_NOTES = {
       '1.0.0': 'Initial release.',
     }
-    DESCRIPTION = "Filtered success only dataset for libero minivla."
+    DATA_PATH = '/home/v-rusyang/shared_data/dataset/libero_minivla_raw_dataset_from_envlogger/COLLECT-libero_90-minivla-2025_02_24-08_19_33--collect libero90 data'
+    DESCRIPTION = f"Filtered success only dataset for libero minivla. Source data path: {DATA_PATH}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -152,9 +153,8 @@ class LiberoSuccessDataset(tfds.core.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
-        path = '/home/v-rusyang/shared_data/dataset/libero_minivla_raw_dataset_from_envlogger/COLLECT-libero_90-minivla-2025_02_24-08_19_33--collect libero90 data'
         return {
-            'train': self._generate_examples(path=path+ "/*"),
+            'train': self._generate_examples(path=self.DATA_PATH+ "/*"),
             # 'val': self._generate_examples(path='data/val/episode_*.npy'), # TODO: add val set, currently only train set is used
         }
 
