@@ -78,7 +78,7 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
     RELEASE_NOTES = {
       '1.0.0': 'Initial release.',
     }
-
+    DESCRIPTION = "this is a test dataset"
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self._embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-large/5")
@@ -157,7 +157,7 @@ class TestDataset(tfds.core.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
-        path = '/home/v-rusyang/shared_data/COLLECT-libero_90-minivla-2025_03_03-07_56_13--eval_self_trained_minivla/0'
+        path = '/home/v-rusyang/shared_data/dataset/libero_minivla_raw_dataset_from_envlogger/COLLECT-libero_90-minivla-2025_02_24-08_19_33--collect libero90 data/0'
         return {
             'train': self._generate_examples(path=path),
             # 'val': self._generate_examples(path='data/val/episode_*.npy'), # TODO: add val set, currently only train set is used
