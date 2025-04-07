@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import sys
-from LIBERO_10.conversion_utils import MultiThreadedDatasetBuilder
+from libero_90.conversion_utils import MultiThreadedDatasetBuilder
 
 
 def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
@@ -43,8 +43,8 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
         for i in range(actions.shape[0]):
             episode.append({
                 'observation': {
-                    'image': images[i][::-1,::-1],
-                    'wrist_image': wrist_images[i][::-1,::-1],
+                    'image': np.flipud(images[i]),
+                    'wrist_image': np.flipud(wrist_images[i]),
                     'state': np.asarray(np.concatenate((states[i], gripper_states[i]), axis=-1), np.float32),
                     'joint_state': np.asarray(joint_states[i], dtype=np.float32),
                 },
@@ -82,7 +82,7 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
             yield ret
 
 
-class LIBERO10(MultiThreadedDatasetBuilder):
+class LIBERO_90(MultiThreadedDatasetBuilder):
     """DatasetBuilder for example dataset."""
 
     VERSION = tfds.core.Version('1.0.0')
@@ -163,5 +163,5 @@ class LIBERO10(MultiThreadedDatasetBuilder):
     def _split_paths(self):
         """Define filepaths for data splits."""
         return {
-            "train": glob.glob("/home/v-rusyang/shared_data/dataset/libero_90/*.hdf5"),
+            "train": glob.glob("/home/v-rusyang/shared_data/dataset/dataset_hdf5/libero_90/*.hdf5"),
         }
