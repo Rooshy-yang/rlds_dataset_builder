@@ -163,5 +163,8 @@ class LIBERO_90(MultiThreadedDatasetBuilder):
     def _split_paths(self):
         """Define filepaths for data splits."""
         return {
-            "train": glob.glob("/home/v-rusyang/shared_data/dataset/modified_libero_rlds/libero_90_no_noops/*.hdf5"),
+            "train": glob.glob("/mnt/shared_data/dataset/dataset_hdf5/relabel_human_data_with_rl_policy/libero_90/*.hdf5"),
         }
+
+# conda activate rlds_env
+# tfds build --data_dir=/mnt/shared_data/dataset/modified_libero_rlds/relabel_human_data_with_rl_policy
